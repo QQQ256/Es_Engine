@@ -36,6 +36,10 @@ class SearchView(View):
         # window.location.href=search_url+'?q='+val+"&s_type="+$(".searchItem.current").attr('data-type')
         # get q as keyword!~
         key_words = request.GET.get('q', '')
+        # the frequency of a key_word that's been searched, use redis func
+        redis_cli.zincrby("search_keywords_set", 1, key_words)
+        # use zrevrangebyscore to sort top 5 words that have high frequency
+        topN_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
         page = request.GET.get('p', "1")
         try:
             page = int(page)
@@ -108,4 +112,5 @@ class SearchView(View):
                                                "total_nums": total_nums,
                                                "page_nums": page_nums,
                                                "last_seconds": used_search_time,
-                                               "cnblog_count": cnbolg_count})
+                                               "cnblog_count": cnbolg_count,
+                                               "topN_search": topN_search})
