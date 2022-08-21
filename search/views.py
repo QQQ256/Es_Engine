@@ -11,6 +11,14 @@ client = Elasticsearch(hosts=["127.0.0.1"])
 redis_cli = redis.StrictRedis("localhost")
 
 # Create your views here.
+
+class IndexView(View):
+    # the top keyword is also shown on the main page
+
+    def get(self, request):
+        topN_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+        return render(request, "index.html", {"topN_search": topN_search})
+
 class SearchSuggest(View):
     def get(self, request):
         key_words = request.GET.get('s', '')  # url:suggest_url+"?s="
@@ -77,6 +85,7 @@ class SearchView(View):
 
         end_time = datetime.now()
         used_search_time = (end_time - start_time).total_seconds()
+        source = "cnblogs"
         cnbolg_count = redis_cli.get("jobbole_count")
         # get data from response and show them on html page
         total_nums = response["hits"]["total"]
@@ -100,9 +109,11 @@ class SearchView(View):
             else:
                 hit_dict["content"] = hit["_source"]["content"][:500]
 
-            hit_dict["created_date"] = hit["_source"]["created_date"]
+            hit_dict["create_date"] = hit["_source"]["created_date"]
             hit_dict["url"] = hit["_source"]["url"]
             hit_dict["source"] = hit["_source"]
+            hit_dict["score"] = hit["_score"]
+
 
             hit_lists.append(hit_dict)
 
@@ -113,4 +124,5 @@ class SearchView(View):
                                                "page_nums": page_nums,
                                                "last_seconds": used_search_time,
                                                "cnblog_count": cnbolg_count,
-                                               "topN_search": topN_search})
+                                               "topN_search": topN_search,
+                                               "source": source})

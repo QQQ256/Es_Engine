@@ -38,7 +38,7 @@
             <div class="historyArea">
             	<p class="history">
                 	<label>热门搜索：</label>
-                    {% for search_words in topn_search %}
+                    {% for search_words in topN_search %}
                         <a href="/search?q={{ search_words }}">{{ search_words }}</a>
                     {% endfor %}
                 </p>
