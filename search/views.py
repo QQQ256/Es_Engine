@@ -10,6 +10,7 @@ from datetime import datetime
 client = Elasticsearch(hosts=["127.0.0.1"])
 redis_cli = redis.StrictRedis("localhost")
 
+
 # Create your views here.
 
 class IndexView(View):
@@ -19,13 +20,14 @@ class IndexView(View):
         topN_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
         return render(request, "index.html", {"topN_search": topN_search})
 
+
 class SearchSuggest(View):
     def get(self, request):
         key_words = request.GET.get('s', '')  # url:suggest_url+"?s="
         re_datas = []
         if key_words:
             s = ArticleType.search()
-            s = s.suggest('my_suggest', "Tiktok", completion={
+            s = s.suggest('my_suggest', key_words, completion={
                 "field": "suggest", "fuzzy": {
                     "fuzziness": 2
                 },
@@ -90,9 +92,9 @@ class SearchView(View):
         # get data from response and show them on html page
         total_nums = response["hits"]["total"]
         if page % 10 > 0:
-            page_nums = int(total_nums/ 10) + 1
+            page_nums = int(total_nums / 10) + 1
         else:
-            page_nums = int(total_nums/ 10);
+            page_nums = int(total_nums / 10);
         # hits saved all info we need (dict type)
         hit_lists = []
         for hit in response["hits"]["hits"]:
@@ -113,7 +115,6 @@ class SearchView(View):
             hit_dict["url"] = hit["_source"]["url"]
             hit_dict["source"] = hit["_source"]
             hit_dict["score"] = hit["_score"]
-
 
             hit_lists.append(hit_dict)
 
